@@ -3,6 +3,11 @@ var request = require('request');
 var async = require('async');
 
 var config = require('./config');
+if (! (config.singly.client_id && config.singly.client_secret) ) {
+  console.log('SINGLY_CLIENT_ID & SINGLY_CLIENT_SECRET required!!!');
+  process.exit(1);
+}
+
 var singly = require('singly')(config.singly.client_id, config.singly.client_secret, config.singly.redirect_uri);
 var db = require('./db');
 var collection;
