@@ -1,4 +1,21 @@
+body {
+  font-family:"helvetica";
+  margin:50px;
+  max-width:500px;
+}
+
 h1 {
    color: #25aae1;
    text-decoration: none;
+}
+
+
+img:hover {
+  cursor:pointer;
+}
+
+input {
+  font-size:18px;
+  border-radius:5px;
+  padding:6px;
 }

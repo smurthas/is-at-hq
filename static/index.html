@@ -4,13 +4,19 @@
   <title>Singly HQ --> IRC</title>
 
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script>
+    $(function() {
+      $('#handle').focus();
+    });
+  </script>
   <link rel="stylesheet" href="/css/styles.css" />
  </head>
 
  <body>
-  <h1>Enter your IRC handle and connect with Foursquare</h1>
+  <h1>Singly @HQ</h1>
+  <h4>Enter your IRC handle, connect with Foursquare, and when you are checked in to Singly HQ, you'll be added to the @hq notifier!</h4>
   <form method="POST" action="/add_handle" id="handle-form">
-    <input type="text" name="handle" placeholder="IRC handle">
+    <input type="text" name="handle" id="handle" placeholder="IRC handle">
   </form>
   <br>
   <img src="/img/connect-4sq.png" onclick="javascript:$('#handle-form').submit();">

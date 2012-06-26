@@ -16,7 +16,7 @@ var config = {
     port: get('PORT', 8043)
   },
   sessionSecret: get('SESSION_SECRET', '42'),
-  pingInterval: parseInt(get('PING_INTERVAL', 5) * 1000),
+  pingInterval: parseInt(get('PING_INTERVAL', 60) * 1000),
   hq: get('HQ', '4daf691893a037b7b06ee236')
 };
 
