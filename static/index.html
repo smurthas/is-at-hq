@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Singly HQ --> IRC</title>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <link rel="stylesheet" href="/css/styles.css" />
+ </head>
+
+ <body>
+  <h1>Enter your IRC handle and connect with Foursquare</h1>
+  <form method="POST" action="/add_handle" id="handle-form">
+    <input type="text" name="handle" placeholder="IRC handle">
+  </form>
+  <br>
+  <img src="/img/connect-4sq.png" onclick="javascript:$('#handle-form').submit();">
+ </body>
+</html>

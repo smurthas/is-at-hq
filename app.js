@@ -18,7 +18,7 @@ var app = express.createServer();
 // Setup for the express web framework
 app.configure(function() {
   app.use(express.logger());
-  app.use(express.static(__dirname + '/public'));
+  app.use(express.static(__dirname + '/static'));
   app.use(express.bodyParser());
   app.use(express.cookieParser());
   app.use(express.session({
@@ -27,13 +27,6 @@ app.configure(function() {
   app.use(app.router);
 });
 
-app.get('/', function(req, res) {
-  res.redirect('/auth/foursquare');
-});
-
-app.get('/auth/foursquare', function(req, res) {
-  res.redirect(singly.getAuthorizeURL('foursquare'));
-});
 
 app.get('/auth_callback', function(req, res) {
   singly.getAccessToken(req.param('code'), function(err, body) {
@@ -43,13 +36,19 @@ app.get('/auth_callback', function(req, res) {
       console.error("DEBUG: profiles", profiles);
       if (!(profiles && profiles.foursquare)) return res.send('need to auth 4sq!');
       req.session.id = profiles.id;
-      var irc_handle = 'smurthas';
-      addUser(req.session.id, req.session.access_token, irc_handle, function(err) {
+      addUser(req.session.id, req.session.access_token, req.session.handle, function(err) {
         if (err) return res.send(err, 500);
         res.redirect('/last_checkin');
       });
     });
   });
+});
+
+app.post('/add_handle', function(req, res) {
+  var handle = req.param('handle');
+  if (!handle) return res.send("must enter your handle!", 400);
+  req.session.handle = handle;
+  res.redirect(singly.getAuthorizeURL('foursquare'));
 });
 
 app.get('/get_hq', function(req, res) {
@@ -87,8 +86,10 @@ function setUserIsAtHQ(id, is, callback) {
 }
 
 function getHQHandles(callback) {
+  // collection.find({}).toArray(function(err, users) {
   collection.find({isAtHQ:true}).toArray(function(err, users) {
     if (err) res.send(err, 500);
+    console.error("DEBUG: users", users);
     var handles = [];
     for(var i in users) handles.push(users[i].handle);
     callback(null, handles);
@@ -122,9 +123,6 @@ function getLastCheckin(access_token, callback) {
   singly.apiCall('/services/foursquare/checkins', {access_token:access_token, limit:1}, function(err, checkins) {
     if (err) return callback(err);
     var lastCheckin = checkins[0];
-    // console.error("DEBUG: lastCheckin", lastCheckin);
-    // console.error("DEBUG: lastCheckin data", lastCheckin && lastCheckin.data);
-    // console.error("DEBUG: lastCheckin venue", lastCheckin && lastCheckin.data && lastCheckin.data.venue);
     console.error("DEBUG: lastCheckin venue id", lastCheckin && lastCheckin.data && lastCheckin.data.venue && lastCheckin.data.venue.id);
     return callback(null, lastCheckin);
   });
