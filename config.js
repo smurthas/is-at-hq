@@ -1,21 +1,23 @@
 var url = require('url');
 var config = {
-  auth: {
+  singly: {
     client_id: get('SINGLY_CLIENT_ID'),
     client_secret: get('SINGLY_CLIENT_SECRET')
   },
   db: {
     host: get('DB_HOST', 'localhost'),
     port: get('DB_PORT', 27017),
-    name: get('DB_NAME', 'shoulder'),
+    name: get('DB_NAME', 'athq'),
     collection: get('DB_COLLECTION', 'users'),
     url: get('MONGOLAB_URI')
   },
   app: {
     host: get('HOST', 'localhost'),
-    port: get('PORT', 8080)
+    port: get('PORT', 8043)
   },
-  sessionSecret: get('SESSION_SECRET', '42')
+  sessionSecret: get('SESSION_SECRET', '42'),
+  pingInterval: parseInt(get('PING_INTERVAL', 5) * 1000),
+  hq: get('HQ', '4daf691893a037b7b06ee236')
 };
 
 config.app.url = generateURL();
@@ -30,7 +32,7 @@ if (config.db.url) {
   config.db.name = parsedURL.pathname.substring(1);
 }
 
-config.auth.redirect_uri = config.app.url + '/auth_callback';
+config.singly.redirect_uri = config.app.url + '/auth_callback';
 
 function get(name, _default) {
   return process.env[name] || _default;

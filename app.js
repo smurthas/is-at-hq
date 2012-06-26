@@ -1,8 +1,9 @@
 var express = require('express');
 var request = require('request');
-var singly = require('singly');
+var async = require('async');
 
 var config = require('./config');
+var singly = require('singly')(config.singly.client_id, config.singly.client_secret, config.singly.redirect_uri);
 var db = require('./db');
 var collection;
 
@@ -21,22 +22,103 @@ app.configure(function() {
   app.use(app.router);
 });
 
+app.get('/', function(req, res) {
+  res.redirect('/auth/foursquare');
+});
 
 app.get('/auth/foursquare', function(req, res) {
   res.redirect(singly.getAuthorizeURL('foursquare'));
 });
 
 app.get('/auth_callback', function(req, res) {
-  singly.getAccessToken(req.query('code'), function(err, body) {
-    singly.apiCall('/services/foursquare/')
+  singly.getAccessToken(req.param('code'), function(err, body) {
+    if (err) return res.send(err);
+    req.session.access_token = body;
+    singly.apiCall('/profiles', {data:true, access_token: req.session.access_token}, function(err, profiles) {
+      console.error("DEBUG: profiles", profiles);
+      if (!(profiles && profiles.foursquare)) return res.send('need to auth 4sq!');
+      req.session.id = profiles.id;
+      var irc_handle = 'smurthas';
+      addUser(req.session.id, req.session.access_token, irc_handle, function(err) {
+        if (err) return res.send(err, 500);
+        res.redirect('/last_checkin');
+      });
+    });
+  });
+});
+
+app.get('/get_hq', function(req, res) {
+  getHQHandles(function(err, handles) {
+    if (err) return res.send(err, 500);
+    res.send(handles);
+  });
+});
+
+app.get('/last_checkin', function(req, res) {
+  if (!(req.session && req.session.access_token)) return res.redirect('/');
+  getLastCheckin(req.session.access_token, function(err, lastCheckin) {
+    if (err) console.error("DEBUG: err", err);
+    res.send(lastCheckin);
   });
 });
 
 
-function addFoursquareUser
+app.get('/access_token', function(res, res) {
+  res.send(req.session.access_token);
+})
 
-function get
+var sort = [['_id','asc']];
+var options = {upsert:true};
+function addUser(id, access_token, handle, callback) {
+  var query = {id:id};
+  var update = {$set: {id: id, access_token: access_token, handle:handle}};
+  collection.findAndModify(query, sort, update, options, callback);
+}
 
+function setUserIsAtHQ(id, is, callback) {
+  var query = {id:id};
+  var update = {$set: {isAtHQ: is}};
+  collection.findAndModify(query, sort, update, {}, callback);
+}
+
+function getHQHandles(callback) {
+  // collection.find({isAtHQ:true}).toArray(callback);
+  collection.find({}).toArray(callback);
+}
+
+
+function updateHQHandles(callback) {
+  console.log("updateHQHandles...");
+  collection.find({}).toArray(function(err, results) {
+    if(err) return console.error("DEBUG: err", err);
+    async.forEach(results, function(user, cb) {
+      isAtHQ(user.access_token, function(err, is) {
+        if (err) return callback(err, is);
+        console.log('user is', is? '': 'not', 'at HQ.');
+        setUserIsAtHQ(user.id, is, cb);
+      });
+    }, callback);
+  });
+}
+
+function isAtHQ(access_token, callback) {
+  getLastCheckin(access_token, function(err, lastCheckin) {
+    if (err) return callback(err, lastCheckin);
+    if (!(lastCheckin && lastCheckin.data && lastCheckin.data.venue)) return callback('bad checkin', lastCheckin)
+    callback(null, lastCheckin.data.venue.id === config.hq);
+  });
+}
+
+function getLastCheckin(access_token, callback) {
+  singly.apiCall('/services/foursquare/checkins', {access_token:access_token, limit:1}, function(err, checkins) {
+    if (err) return callback(err);
+    var lastCheckin = checkins[0];
+    console.error("DEBUG: lastCheckin", lastCheckin);
+    console.error("DEBUG: lastCheckin data", lastCheckin && lastCheckin.data);
+    console.error("DEBUG: lastCheckin venue", lastCheckin && lastCheckin.data && lastCheckin.data.venue);
+    return callback(null, lastCheckin);
+  });
+}
 
 db.init(function(err, _collection) {
   if (err) {
@@ -48,4 +130,6 @@ db.init(function(err, _collection) {
 
   app.listen(config.app.port);
   console.log('listening on ' + config.app.port);
+
+  setInterval(updateHQHandles, config.pingInterval);
 });
