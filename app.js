@@ -82,8 +82,12 @@ function setUserIsAtHQ(id, is, callback) {
 }
 
 function getHQHandles(callback) {
-  // collection.find({isAtHQ:true}).toArray(callback);
-  collection.find({}).toArray(callback);
+  collection.find({isAtHQ:true}).toArray(function(err, users) {
+    if (err) res.send(err, 500);
+    var handles = [];
+    for(var i in users) handles.push(users[i].handle);
+    callback(null, handles);
+  });
 }
 
 
@@ -113,9 +117,10 @@ function getLastCheckin(access_token, callback) {
   singly.apiCall('/services/foursquare/checkins', {access_token:access_token, limit:1}, function(err, checkins) {
     if (err) return callback(err);
     var lastCheckin = checkins[0];
-    console.error("DEBUG: lastCheckin", lastCheckin);
-    console.error("DEBUG: lastCheckin data", lastCheckin && lastCheckin.data);
-    console.error("DEBUG: lastCheckin venue", lastCheckin && lastCheckin.data && lastCheckin.data.venue);
+    // console.error("DEBUG: lastCheckin", lastCheckin);
+    // console.error("DEBUG: lastCheckin data", lastCheckin && lastCheckin.data);
+    // console.error("DEBUG: lastCheckin venue", lastCheckin && lastCheckin.data && lastCheckin.data.venue);
+    console.error("DEBUG: lastCheckin venue id", lastCheckin && lastCheckin.data && lastCheckin.data.venue && lastCheckin.data.venue.id);
     return callback(null, lastCheckin);
   });
 }
