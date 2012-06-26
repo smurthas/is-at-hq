@@ -29,6 +29,8 @@ app.configure(function() {
 
 
 app.get('/auth_callback', function(req, res) {
+  var code = req.param('code');
+  if (!code) return res.send('got error:' + req.param('error'), 500);
   singly.getAccessToken(req.param('code'), function(err, body) {
     if (err) return res.send(err);
     req.session.access_token = body;
