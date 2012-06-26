@@ -1,0 +1,23 @@
+{
+  "author": "Simon Murtha-Smith <two570@gmail.com> (smurthas.com)",
+  "name": "hq",
+  "description": "who's at HQ?",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/smurthas/is-at-hq.git"
+  },
+  "main": "app.js",
+  "dependencies": {
+    "async":    "0.1.22",
+    "express":  "3.0.0beta4",
+    "mongodb":  "1.0.2",
+    "request":  "2.9.202",
+    "singly":   "0.0.0"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "0.6.18"
+  }
+}
